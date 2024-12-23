@@ -23,8 +23,8 @@
       E = PROPS(1) ! YOUNG'S MODULUS
       NU = PROPS(2) ! POISSON'S RATIO
       
-      LAMBDA = (NU*E)/((1.0 + NU)*(1.0 - (2.0*NU))) ! 1st Lamé PARAMETER
-      G = E/(2.0*(1.0 + NU)) ! 2nd Lamé PARAMETER 2
+      LAMBDA = (NU*E)/((1.0 + NU)*(1.0 - (2.0*NU))) ! 1st LamÃ© PARAMETER
+      G = E/(2.0*(1.0 + NU)) ! 2nd LamÃ© PARAMETER 2
 
 !     ELASTIC STIFFNESS MATRIX
 
