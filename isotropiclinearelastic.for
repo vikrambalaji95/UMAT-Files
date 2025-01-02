@@ -28,10 +28,10 @@
 
 !     ELASTIC STIFFNESS MATRIX
 
-      ELSTIFF = 0.0 ! INITIALISE THE ELASTIC STIFFNESS MATRIX TO ZERO
+      ELSTIFF = 0.0 ! Initialise the elastic stiffness matrix to zero
 
-      IF (NDI.EQ.3) THEN ! NUMBER OF DIRECT STRESS COMPONENTS IS 3
-!     THE PROBLEM IS EITHER 3D OR PLANE STRAIN
+      IF (NDI.EQ.3) THEN ! Number of direct stress components is 3
+!     The problem is either 3d or plane strain
       DO K1=1, NDI
           DO K2=1, NDI
               ELSTIFF(K2, K1) = LAMBDA
@@ -42,8 +42,8 @@
           ELSTIFF(K1, K1) = G
       END DO
 
-      ELSE ! NUMBER OF DIRECT STRESS COMPONENTS IS 2
-!     THE PROBLEM IS PLANE STRESS
+      ELSE ! Number of direct stress components is 2
+!     The problem is plane stress
       DO K1=1, NDI 
           DO K2=1, NDI
               ELSTIFF(K2, K1) = NU*E/(1.0 - (NU)**2.0)
@@ -62,7 +62,7 @@
 
 !     TANGENT STIFFNESS MATRIX
 
-      DDSDDE = ELSTIFF ! FOR LINEAR ELASTIC CASE, TANGENT STIFFNESS MATRIX IS SAME AS THE ELASTIC STIFFNESS MATRIX
+      DDSDDE = ELSTIFF ! For linear elastic case, tangent stiffness matrix is same as the elastic stiffness matrix
 
       RETURN
       END
