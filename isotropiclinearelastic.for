@@ -22,13 +22,13 @@
 !     MATERIAL PROPERTIES INPUT
       E = PROPS(1) ! YOUNG'S MODULUS
       NU = PROPS(2) ! POISSON'S RATIO
-      
-      LAMBDA = (NU*E)/((1.0 + NU)*(1.0 - (2.0*NU))) ! 1st Lamé Parameter
-      G = E/(2.0*(1.0 + NU)) ! 2nd Lamé Parameter
 
 !     ELASTIC STIFFNESS MATRIX
 
       ELSTIFF = 0.0 ! Initialise the elastic stiffness matrix to zero
+
+      LAMBDA = (NU*E)/((1.0 + NU)*(1.0 - (2.0*NU))) ! 1st Lamé Parameter
+      G = E/(2.0*(1.0 + NU)) ! 2nd Lamé Parameter
 
       IF (NDI.EQ.3) THEN ! Number of direct stress components is 3
 !     The problem is either 3d or plane strain
