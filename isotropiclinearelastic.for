@@ -32,26 +32,26 @@
 
       IF (NDI.EQ.3) THEN ! Number of direct stress components is 3
 !     The problem is either 3d or plane strain
-      DO K1=1, NDI
-          DO K2=1, NDI
-              ELSTIFF(K2, K1) = LAMBDA
+      DO I=1, NDI
+          DO J=1, NDI
+              ELSTIFF(J, I) = LAMBDA
           END DO
-          ELSTIFF(K1, K1) = LAMBDA + 2.0*G
+          ELSTIFF(I, I) = LAMBDA + 2.0*G
       END DO
-      DO K1 = NDI+1, NTENS
-          ELSTIFF(K1, K1) = G
+      DO I = NDI+1, NTENS
+          ELSTIFF(I, I) = G
       END DO
 
       ELSE ! Number of direct stress components is 2
 !     The problem is plane stress
-      DO K1=1, NDI 
-          DO K2=1, NDI
-              ELSTIFF(K2, K1) = NU*E/(1.0 - (NU)**2.0)
+      DO I=1, NDI 
+          DO J=1, NDI
+              ELSTIFF(J, I) = NU*E/(1.0 - (NU)**2.0)
           END DO
-          ELSTIFF(K1, K1) = E/(1.0 - (NU)**2.0)
+          ELSTIFF(I, I) = E/(1.0 - (NU)**2.0)
       END DO
-      DO K1 = NDI+1, NTENS
-          ELSTIFF(K1, K1) = G
+      DO I = NDI+1, NTENS
+          ELSTIFF(I, I) = G
       END DO
 
       END IF
