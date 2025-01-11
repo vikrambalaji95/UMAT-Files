@@ -1,164 +1,164 @@
-      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,
-     1 RPL,DDSDDT,DRPLDE,DRPLDT,
-     2 STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,PREDEF,DPRED,CMNAME,
-     3 NDI,NSHR,NTENS,NSTATV,PROPS,NPROPS,COORDS,DROT,PNEWDT,
-     4 CELENT,DFGRD0,DFGRD1,NOEL,NPT,LAYER,KSPT,JSTEP,KINC)
+      subroutine umat(stress,statev,ddsdde,sse,spd,scd,
+     1 rpl,ddsddt,drplde,drpldt,
+     2 stran,dstran,time,dtime,temp,dtemp,predef,dpred,cmname,
+     3 ndi,nshr,ntens,nstatv,props,nprops,coords,drot,pnewdt,
+     4 celent,dfgrd0,dfgrd1,noel,npt,layer,kspt,jstep,kinc)
 
-      INCLUDE 'ABA_PARAM.INC'
+      include 'aba_param.inc'
 
-      CHARACTER*80 CMNAME
+      character*80 cmname
 	  
-      REAL*8 STRESS(NTENS), STATEV(NSTATV), DDSDDE(NTENS, NTENS),
-     1 DDSDDT(NTENS), DRPLDE(NTENS), STRAN(NTENS), DSTRAN(NTENS),
-     2 TIME(2), PREDEF(1), DPRED(1), PROPS(NPROPS), COORDS(3), 
-     3 DROT(3, 3), DFGRD0(3, 3), DFGRD1(3, 3), JSTEP(4)
+      real*8 stress(ntens), statev(nstatv), ddsdde(ntens, ntens),
+     1 ddsddt(ntens), drplde(ntens), stran(ntens), dstran(ntens),
+     2 time(2), predef(1), dpred(1), props(nprops), coords(3), 
+     3 drot(3, 3), dfgrd0(3, 3), dfgrd1(3, 3), jstep(4)
       
 ! ----------------------------------------------------------------
-!     UMAT FOR ISOTROPIC VON MISES YIELD CRITERION (J2 PLASTICITY)
-!     LINEAR HARDENING LAW (Y = Y0 + H*EQPLAS)
-!     FIRST ORDER FORWARD EULER EXPLICIT ALGORITHM
+!     umat for isotropic von mises yield criterion (j2 plasticity)
+!     linear hardening law (y = y0 + h*eqplas)
+!     first order forward euler explicit algorithm
 ! ----------------------------------------------------------------
 
-      REAL*8 EQPLAS, E, NU, Y0, H, LAMBDA, G, ELSTIFF(NTENS, NTENS), 
-     1 SHYDRO, SMISES, Y, YIELDFN, DEQPL, FLOW(NTENS), 
-     2 TERM1, TERM2, TERM3(NTENS, NTENS)
+      real*8 eqplas, e, nu, y0, h, lambda, g, elstiff(ntens, ntens), 
+     1 shydro, smises, y, yieldfn, deqpl, flow(ntens), 
+     2 term1, term2, term3(ntens, ntens)
 
-!     MATERIAL PROPERTIES INPUT
+!     material properties input
 
-      E = PROPS(1) ! Young's Modulus
-      NU = PROPS(2) ! Poisson's Ratio
-      Y0 = PROPS(3) ! Initial yield stress
-      H = PROPS(4) ! Linear hardening rate
+      e = props(1) ! young's modulus
+      nu = props(2) ! poisson's ratio
+      y0 = props(3) ! initial yield stress
+      h = props(4) ! linear hardening rate
       
-!     RECOVER SOLUTION DEPENDENT STATE VARIABLES FROM PREVIOUS STEP TIME INCREMENT
-      EQPLAS = STATEV(1) ! Equivalent plastic strain
+!     recover solution dependent state variables from previous step time increment
+      eqplas = statev(1) ! equivalent plastic strain
 
-!     SET UP ELASTIC STIFFNESS MATRIX 
+!     set up elastic stiffness matrix 
 
-      ELSTIFF = 0.0 ! Initialise the elastic stiffness matrix to zero
+      elstiff = 0.0 ! initialise the elastic stiffness matrix to zero
 
-      LAMBDA = NU*E/((1.0 + NU)*(1.0 - 2.0*NU)) ! 1st Lamé Parameter
-      G = E/(2.0*(1.0 + NU)) ! 2nd Lamé Parameter
+      lambda = nu*e/((1.0 + nu)*(1.0 - 2.0*nu)) ! 1st lamé parameter
+      g = e/(2.0*(1.0 + nu)) ! 2nd lamé parameter
 
-      IF (NDI.EQ.3) THEN ! Number of direct stress components is 3
-!     The problem is either 3d or plane strain
-      DO I = 1, NDI
-          DO J = 1, NDI
-              ELSTIFF(J, I) = LAMBDA
-          END DO
-          ELSTIFF(I, I) = LAMBDA + 2.0*G
-      END DO
-      DO I = NDI+1, NTENS
-          ELSTIFF(I, I) = G
-      END DO
+      if (ndi.eq.3) then ! number of direct stress components is 3
+!     the problem is either 3d or plane strain
+      do i = 1, ndi
+          do j = 1, ndi
+              elstiff(j, i) = lambda
+          end do
+          elstiff(i, i) = lambda + 2.0*g
+      end do
+      do i = ndi+1, ntens
+          elstiff(i, i) = g
+      end do
 
-      ELSE ! Number of direct stress components is 2
-!     The problem is plane stress
-      DO I = 1, NDI 
-          DO J = 1, NDI
-              ELSTIFF(J, I) = NU*E/(1.0 - (NU)**2.0)
-          END DO
-          ELSTIFF(I, I) = E/(1.0 - (NU)**2.0)
-      END DO
-      DO I = NDI+1, NTENS
-          ELSTIFF(I, I) = G
-      END DO
+      else ! number of direct stress components is 2
+!     the problem is plane stress
+      do i = 1, ndi 
+          do j = 1, ndi
+              elstiff(j, i) = nu*e/(1.0 - (nu)**2.0)
+          end do
+          elstiff(i, i) = e/(1.0 - (nu)**2.0)
+      end do
+      do i = ndi+1, ntens
+          elstiff(i, i) = g
+      end do
 
-      END IF
+      end if
 
-      CALL SINV(STRESS, SHYDRO, SMISES, NDI, NSHR) !Utility routine SINV to calculate the stress invariants
+      call sinv(stress, shydro, smises, ndi, nshr) !utility routine sinv to calculate the stress invariants
       ! 1st invariant is the trace of the stress matrix which gives hydrostatic stress
-      ! 2nd invariant is the von mises equivalent stress - sqrt(3*J2)
+      ! 2nd invariant is the von mises equivalent stress - sqrt(3*j2)
 
-      Y = Y0 + H*EQPLAS ! Linear hardening law
+      y = y0 + h*eqplas ! linear hardening law
 
-      YIELDFN = SMISES - Y ! Yield function
+      yieldfn = smises - y ! yield function
 
-      IF (YIELDFN.LT.0.0) THEN
-      ! The state of stress is elastic, hence zero plastic deformation in this increment
-      DEQPL = 0.0
+      if (yieldfn.lt.0.0) then
+      ! the state of stress is elastic, hence zero plastic deformation in this increment
+      deqpl = 0.0
 
-      STRESS = STRESS + MATMUL(ELSTIFF, DSTRAN)
+      stress = stress + matmul(elstiff, dstran)
       
-      DDSDDE = ELSTIFF ! For elastic case, tangent stiffness matrix is same as the elastic stiffness matrix
+      ddsdde = elstiff ! for elastic case, tangent stiffness matrix is same as the elastic stiffness matrix
 
-      ELSE
-      ! Non zero plastic deformation in this increment
+      else
+      ! non zero plastic deformation in this increment
       
-      ! Flow vector for von mises
-      DO I = 1, NDI ! Direct components
-      FLOW(I) = 3.0*(STRESS(I) - SHYDRO)/(2.0*SMISES)
-      END DO
-      DO I = NDI + 1, NTENS ! Shear components
-      FLOW(I) = 3.0*STRESS(I)/SMISES
-      END DO
+      ! flow vector for von mises
+      do i = 1, ndi ! direct components
+      flow(i) = 3.0*(stress(i) - shydro)/(2.0*smises)
+      end do
+      do i = ndi + 1, ntens ! shear components
+      flow(i) = 3.0*stress(i)/smises
+      end do
 
-      ! Calculate the increment in effective plastic strain
+      ! calculate the increment in effective plastic strain
 
-      CALL INNERPROD(FLOW, MATMUL(ELSTIFF,DSTRAN), TERM1, NTENS)
-      CALL INNERPROD(FLOW, MATMUL(ELSTIFF,FLOW), TERM2, NTENS)
+      call innerprod(flow, matmul(elstiff,dstran), term1, ntens)
+      call innerprod(flow, matmul(elstiff,flow), term2, ntens)
 
-      DEQPL = TERM1/(TERM2 + H)
+      deqpl = term1/(term2 + h)
 
-      ! Calculate the updated stress
-      STRESS = STRESS + MATMUL(ELSTIFF, DSTRAN - DEQPL*FLOW)
+      ! calculate the updated stress
+      stress = stress + matmul(elstiff, dstran - deqpl*flow)
 
-      ! Evaluate the material tangent stiffness matrix DDSDDE
-      CALL OUTERPROD(MATMUL(ELSTIFF,FLOW), MATMUL(ELSTIFF,FLOW), 
-     1 TERM3, NTENS, NTENS)
+      ! evaluate the material tangent stiffness matrix ddsdde
+      call outerprod(matmul(elstiff,flow), matmul(elstiff,flow), 
+     1 term3, ntens, ntens)
 
-      DDSDDE = ELSTIFF - (1.0/(TERM2 + H))*TERM3
+      ddsdde = elstiff - (1.0/(term2 + h))*term3
 
-      END IF
+      end if
 
-      ! Update the equivalent plastic strain and store it in the solution dependent state variable
-      STATEV(1) = EQPLAS + DEQPL
+      ! update the equivalent plastic strain and store it in the solution dependent state variable
+      statev(1) = eqplas + deqpl
 
-      RETURN
-      END SUBROUTINE UMAT
+      return
+      end subroutine umat
 ! ---------------------------------------------------------------------------------------------------------------------------------
 
-      SUBROUTINE INNERPROD(A, B, A_DOT_B, NDIM)
-      ! Subroutine to calculate the inner or dot product of two vectors each containing NDIM elements
+      subroutine innerprod(a, b, a_dot_b, ndim)
+      ! subroutine to calculate the inner or dot product of two vectors each containing ndim elements
       
-      INCLUDE 'ABA_PARAM.INC'
+      include 'aba_param.inc'
 
-      INTEGER NDIM
+      integer ndim
 
-      REAL*8 A(NDIM), B(NDIM), A_DOT_B
+      real*8 a(ndim), b(ndim), a_dot_b
       
-      IF (SIZE(A).EQ.SIZE(B)) THEN
+      if (size(a).eq.size(b)) then
           
-          A_DOT_B = 0.0
-          DO I = 1, NDIM
-              A_DOT_B = A_DOT_B + A(I)*B(I)
-          END DO
+          a_dot_b = 0.0
+          do i = 1, ndim
+              a_dot_b = a_dot_b + a(i)*b(i)
+          end do
           
-      ELSE
+      else
           
-          WRITE(6,*) 'VECTOR DIMENSIONS DO NOT MATCH - INPUT ERROR'
+          write(6,*) 'vector dimensions do not match - input error'
       
-      END IF
+      end if
 
-      RETURN
-      END SUBROUTINE INNERPROD
+      return
+      end subroutine innerprod
 ! ---------------------------------------------------------------------------------------------------------------------------------
       
-      SUBROUTINE OUTERPROD(A, B, A_DYAD_B, NDIM_A, NDIM_B)
-      ! Subroutine to calculate the outer or dyadic product of two vectors containing NDIM_A and NDIM_B elements respectively
+      subroutine outerprod(a, b, a_dyad_b, ndim_a, ndim_b)
+      ! subroutine to calculate the outer or dyadic product of two vectors containing ndim_a and ndim_b elements respectively
       
-      INCLUDE 'ABA_PARAM.INC'
+      include 'aba_param.inc'
 
-      INTEGER NDIM_A, NDIM_B
+      integer ndim_a, ndim_b
       
-      REAL*8 A(NDIM_A), B(NDIM_B), A_DYAD_B(NDIM_A, NDIM_B)
+      real*8 a(ndim_a), b(ndim_b), a_dyad_b(ndim_a, ndim_b)
           
-      DO I = 1, NDIM_A
-          DO J = 1, NDIM_B
-              A_DYAD_B(I, J) = A(I)*B(J)
-          END DO
-      END DO
+      do i = 1, ndim_a
+          do j = 1, ndim_b
+              a_dyad_b(i, j) = a(i)*b(j)
+          end do
+      end do
       
-      RETURN
-      END SUBROUTINE OUTERPROD
+      return
+      end subroutine outerprod
 ! ---------------------------------------------------------------------------------------------------------------------------------
