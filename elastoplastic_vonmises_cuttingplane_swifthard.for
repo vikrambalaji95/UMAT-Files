@@ -39,8 +39,8 @@
 
 !     SET UP ELASTIC STIFFNESS MATRIX
       
-      LAMBDA = NU*E/((1.0 + NU)*(1.0 - 2.0*NU)) ! 1st Lamé Parameter
-      G = E/(2.0*(1.0 + NU)) ! 2nd Lamé Parameter
+      LAMBDA = NU*E/((1.0 + NU)*(1.0 - 2.0*NU)) ! 1st LamÃ© Parameter
+      G = E/(2.0*(1.0 + NU)) ! 2nd LamÃ© Parameter
 
       ELSTIFF = 0.0 ! Initialise the elastic stiffness matrix to zero
 
