@@ -14,11 +14,11 @@
      3 PROPS(NPROPS),COORDS(3),DROT(3,3),DFGRD0(3,3),DFGRD1(3,3),
      4 JSTEP(4)
 
-! ----------------------------------------------------------------
+! -------------------------------------------------------------------------------------------
 !     UMAT FOR ISOTROPIC VON MISES YIELD CRITERION (J2 PLASTICITY)
 !     SWIFT HARDENING LAW - Y = K*(EPS0 + EQPLAS)^N
-!     IMPLICIT GENERALISED CLOSED POINT PROJECTION ALGORITHM
-! ----------------------------------------------------------------
+!     FULLY IMPLICIT GENERALISED CLOSED POINT PROJECTION ALGORITHM (EULER BACKWARD ALGORITHM)
+! -------------------------------------------------------------------------------------------
 
       REAL*8 E, NU, K, EPS0, N, EQPLAS, LAMBDA, G, SMISES, SHYDRO,
      1 ELSTIFF(NTENS, NTENS), ELCOMP(NTENS, NTENS), YIELDFN, HARD(3),
